@@ -1,8 +1,7 @@
-#![allow(dead_code)]
-
 // lexer.rs
 use crate::token::{Token, TokenType};
 
+#[derive(Debug)]
 pub struct Lexer {
     source: Vec<char>,   // The raw code, split into an array of characters
     tokens: Vec<Token>,  // The list of tokens we are building
@@ -60,7 +59,15 @@ impl Lexer {
             '\n' => self.line += 1,
             
             // Catch-all for things we don't recognize yet
-            _ => println!("Error: Unexpected character '{}' at line {}", c, self.line),
+            _ => {
+                if c.is_ascii_digit() {
+                    self.number();
+                } else if c.is_ascii_alphabetic() { // For variables and keywords
+                    self.letter();
+                } else {
+                    println!("Error: Unexpected character '{}' at line {}", c, self.line);
+                }
+            }
         }
     }
 
@@ -76,5 +83,40 @@ impl Lexer {
         // Grab the slice of characters from start to current
         let text: String = self.source[self.start..self.current].iter().collect();
         self.tokens.push(Token::new(kind, text, self.line));
+    }
+
+    fn peek(&self) -> char {
+        if self.is_at_end() {
+            return '\0'; // Return a null char if we hit the end of the file
+        }
+        self.source[self.current]
+    }
+
+    fn letter(&mut self) {
+        // Keep advancing as long as the next character is a digit
+        while self.peek().is_ascii_alphabetic() {
+            self.advance();
+        }
+
+        let text: String = self.source[self.start..self.current].iter().collect();
+        let kind = match text.as_str() {
+            "if" => TokenType::If,
+            "var" => TokenType::Var,
+            "print" => TokenType::Print,
+            _ => TokenType::Identifier,
+        };
+
+        self.add_token(kind);
+    }
+
+    fn number(&mut self) {
+        // Keep advancing as long as the next character is a digit
+        while self.peek().is_ascii_digit() {
+            self.advance();
+        }
+
+        // We hit a non-digit! The family is complete.
+        // add_token will grab the slice from `self.start` to `self.current`.
+        self.add_token(TokenType::Number);
     }
 }
