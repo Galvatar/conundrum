@@ -3,7 +3,7 @@
 use core::panic;
 
 use crate::token::{Token, TokenType};
-use crate::ast::{Expr, Literal, Stmt}; // Grab the Expr enum we defined earlier
+use crate::ast::{Expr, Literal, Stmt, TargetType}; // Grab the Expr enum we defined earlier
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -23,7 +23,8 @@ impl Parser {
                 self.advance();
                 continue;
             } else if self.match_token(TokenType::If)
-                || self.match_token(TokenType::Var)
+                || self.match_token(TokenType::StringVar)
+                || self.match_token(TokenType::IntVar)
                 || self.match_token(TokenType::Print) {
                 statements.push(self.statement());
             } else if self.match_token(TokenType::OpenCurly) {
@@ -52,13 +53,19 @@ impl Parser {
             let expr = self.expression();
             let then = self.parse();
             Stmt::If { condition:expr, then_branch: then, else_branch: None }
-        } else if self.match_token(TokenType::Var) {
+        } else if self.match_token(TokenType::StringVar) || self.match_token(TokenType::IntVar) {
+            let token = self.peek();
             self.advance();
             let name = self.advance();
             let equal = self.advance();
             if equal.kind == TokenType::Equal {
                 let expr = self.expression();
-                return Stmt::Var { name: name.lexeme, initializer: expr };
+                let target = match token.kind {
+                    TokenType::StringVar => TargetType::String,
+                    TokenType::IntVar => TargetType::Int,
+                    _ => panic!("Could not find declared variable type")
+                };
+                return Stmt::Var { name: name.lexeme, initializer: expr, var_type: target };
             }
             panic!("Invalid variable declaration structure");
         } else {

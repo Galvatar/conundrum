@@ -8,6 +8,12 @@ pub enum Literal {
     String(String),
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TargetType {
+    String,
+    Int,
+}
+
 /// Represents anything that produces a value
 #[derive(Debug, Clone)]
 pub enum Expr {
@@ -38,6 +44,7 @@ pub enum Stmt {
     /// A variable declaration (e.g., `let x = 5;`)
     Var {
         name: String,
+        var_type: TargetType,
         initializer: Expr,
     },
     

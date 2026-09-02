@@ -112,7 +112,8 @@ impl Lexer {
         let text: String = self.source[self.start..self.current].iter().collect();
         let kind = match text.as_str() {
             "if" => TokenType::If,
-            "var" => TokenType::Var,
+            "string" => TokenType::StringVar,
+            "int" => TokenType::IntVar,
             "print" => TokenType::Print,
             _ => TokenType::Identifier,
         };

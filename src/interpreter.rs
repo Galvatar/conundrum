@@ -1,7 +1,7 @@
 use core::panic;
 use std::{collections::HashMap};
 
-use crate::{ast::{Expr, Literal, Stmt}, token::TokenType, value::RuntimeValue};
+use crate::{ast::{Expr, Literal, Stmt, TargetType}, token::TokenType, value::RuntimeValue};
 
 pub struct Interpreter {
     statements: Vec<Stmt>,
@@ -30,8 +30,18 @@ impl Interpreter {
                 let value = self.evaluate(expr);
                 println!("{}", value);
             }
-            Stmt::Var { name, initializer } => {
+            Stmt::Var { name, initializer, var_type } => {
                 let result = self.evaluate(initializer);
+                match (&var_type, &result) {
+                    (TargetType::Int, RuntimeValue::Number(_)) => {},
+                    (TargetType::String, RuntimeValue::String(_)) => {},
+                    (expected, actual) => {
+                        panic!(
+                            "TypeError: Cannot assign value of type {:?} to variable '{}' declared as {:?}",
+                            actual, name, expected
+                        );
+                    }
+                }
                 self.variables.insert(name.clone(), result);
             }
             Stmt::If { condition, then_branch, else_branch } => {

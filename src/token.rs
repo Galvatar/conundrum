@@ -22,7 +22,8 @@ pub enum TokenType {
     ClosingCurly, // }
     
     // Keywords
-    Var,        // "var"
+    StringVar,        // "string"
+    IntVar,         // "int"
     If,         // "if"
     Print,      // "print"
     
