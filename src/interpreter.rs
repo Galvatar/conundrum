@@ -1,7 +1,7 @@
 use core::panic;
 use std::{collections::HashMap};
 
-use crate::{ast::{Expr, Stmt}, token::TokenType, value::RuntimeValue};
+use crate::{ast::{Expr, Literal, Stmt}, token::TokenType, value::RuntimeValue};
 
 pub struct Interpreter {
     statements: Vec<Stmt>,
@@ -39,7 +39,8 @@ impl Interpreter {
 
                 // Any non-zero float evaluates to true
                 let is_truthy = match condition_val {
-                    RuntimeValue::Literal(n) => n != 0.0,
+                    RuntimeValue::Number(n) => n != 0.0,
+                    RuntimeValue::String(val) => !val.is_empty()
                 };
 
                 if is_truthy {
@@ -58,26 +59,34 @@ impl Interpreter {
     fn evaluate(&mut self, expr: &Expr) -> RuntimeValue {
         match expr {
             Expr::Literal(value) => {
-                RuntimeValue::Literal(*value)
+                match value {
+                    Literal::Number(count) => RuntimeValue::Number(*count),
+                    Literal::String(str) => RuntimeValue::String(str.clone())
+                }
             }
 
             Expr::Binary { left, operator, right} => {
                 let left_val = self.evaluate(left);
                 let right_val = self.evaluate(right);
-                
-                // Extract numbers from runtime values to perform math
-                let RuntimeValue::Literal(left_num) = left_val;
-                let RuntimeValue::Literal(right_num) = right_val;
 
-                let result = match operator.kind {
-                    TokenType::Plus => left_num + right_num,
-                    TokenType::Minus => left_num - right_num,
-                    TokenType::Star => left_num * right_num,
-                    TokenType::Slash => left_num / right_num,
-                    _ => panic!("Unknown binary operator"),
-                };
+                match (left_val, &operator.kind, right_val) {
+                    // Number arithmetic
+                    (RuntimeValue::Number(l), TokenType::Plus, RuntimeValue::Number(r)) => RuntimeValue::Number(l + r),
+                    (RuntimeValue::Number(l), TokenType::Minus, RuntimeValue::Number(r)) => RuntimeValue::Number(l - r),
+                    (RuntimeValue::Number(l), TokenType::Star, RuntimeValue::Number(r)) => RuntimeValue::Number(l * r),
+                    (RuntimeValue::Number(l), TokenType::Slash, RuntimeValue::Number(r)) => RuntimeValue::Number(l / r),
 
-                RuntimeValue::Literal(result)
+                    // String concatenation
+                    (RuntimeValue::String(l), TokenType::Plus, RuntimeValue::String(r)) => {
+                        RuntimeValue::String(format!("{}{}", l, r))
+                    }
+
+                    // Mismatched types or unsupported operations (e.g., subtracting strings)
+                    (left_type, op, right_type) => panic!(
+                        "TypeError: Cannot apply operator '{:?}' between {:?} and {:?}",
+                        op, left_type, right_type
+                    ),
+                }
             }
 
             Expr::Variable(var) => {

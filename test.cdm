@@ -1,5 +1,1 @@
-var age = 5 + 8 * 2
-var test = 10
-if (test) {
-    print(age)
-}
+print(5+3*2)

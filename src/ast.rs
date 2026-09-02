@@ -2,11 +2,17 @@
 #![allow(dead_code)]
 use crate::token::Token;
 
+#[derive(Debug, Clone)]
+pub enum Literal {
+    Number(f64),
+    String(String),
+}
+
 /// Represents anything that produces a value
 #[derive(Debug, Clone)]
 pub enum Expr {
     /// A raw number, like `5.0`
-    Literal(f64),
+    Literal(Literal),
     
     /// A variable name, like `x`
     Variable(String),

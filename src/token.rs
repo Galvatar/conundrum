@@ -12,6 +12,7 @@ pub enum TokenType {
     
     // Literals (Values)
     Number,     // e.g., 5.0
+    String,
     Identifier, // e.g., variable names like "x"
 
     // Brackets

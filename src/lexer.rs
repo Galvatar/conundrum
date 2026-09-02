@@ -1,3 +1,5 @@
+use std::println;
+
 // lexer.rs
 use crate::token::{Token, TokenType};
 
@@ -69,6 +71,8 @@ impl Lexer {
             _ => {
                 if c.is_ascii_digit() {
                     self.number();
+                } else if c == '"' {
+                    self.string();
                 } else if c.is_ascii_alphabetic() { // For variables and keywords
                     self.letter();
                 } else {
@@ -114,6 +118,20 @@ impl Lexer {
         };
 
         self.add_token(kind);
+    }
+
+    fn string(&mut self) {
+        // set the start here for the string
+        self.start = self.current;
+
+        // move until we find the closing tag
+        while self.peek() != '"' {
+            self.advance();
+        }
+
+        // add the string using the start pointer
+        self.add_token(TokenType::String);
+        self.advance();
     }
 
     fn number(&mut self) {

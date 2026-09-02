@@ -3,7 +3,7 @@
 use core::panic;
 
 use crate::token::{Token, TokenType};
-use crate::ast::{Expr, Stmt}; // Grab the Expr enum we defined earlier
+use crate::ast::{Expr, Literal, Stmt}; // Grab the Expr enum we defined earlier
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -107,7 +107,10 @@ impl Parser {
         match token.kind {
             TokenType::Number => {
                 let value: f64 = token.lexeme.parse().unwrap();
-                Expr::Literal(value)
+                Expr::Literal(Literal::Number(value))
+            }
+            TokenType::String => {
+                Expr::Literal(Literal::String(token.lexeme))
             }
             TokenType::Identifier => {
                 Expr::Variable(token.lexeme)

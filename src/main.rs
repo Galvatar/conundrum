@@ -21,9 +21,11 @@ fn main() {
     let mut parser = Parser::new(tokens);
     let stmt = parser.parse();
 
-    // interpret and execute the statements
+    // // interpret and execute the statements
     let interpreter = Interpreter::new(stmt);
     interpreter.interpret();
+
+    // debug statement
     // let debug_string = format!("{:?}", stmt);
     // println!("{}", debug_string);
 }
