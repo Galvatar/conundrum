@@ -7,54 +7,64 @@ use crate::ast::{Expr, Stmt}; // Grab the Expr enum we defined earlier
 
 pub struct Parser {
     tokens: Vec<Token>,
-    statements: Vec<Stmt>,
     current: usize,
 }
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
-        Self { tokens, current: 0, statements: Vec::new() }
+        Self { tokens, current: 0 }
     }
 
-    pub fn parse(mut self) -> Vec<Stmt> {
+    pub fn parse(&mut self) -> Vec<Stmt> {
+        let mut statements = Vec::new();
+
         while !self.is_at_end() {
-            let peek = self.peek();
-            if peek.kind == TokenType::If
-                || peek.kind == TokenType::Var
-                || peek.kind == TokenType::Print {
-                let statement = self.statement();
-                self.statements.push(statement);
+            if self.match_token(TokenType::NewLine) {
+                self.advance();
+                continue;
+            } else if self.match_token(TokenType::If)
+                || self.match_token(TokenType::Var)
+                || self.match_token(TokenType::Print) {
+                statements.push(self.statement());
+            } else if self.match_token(TokenType::OpenCurly) {
+                self.advance();
+                let block_stmts = self.parse();
+                statements.extend(block_stmts);
+            } else if self.match_token(TokenType::ClosingCurly) {
+                self.advance();
+                break;
             } else {
                 let expression = self.expression();
-                self.statements.push(Stmt::Expression(expression));
+                statements.push(Stmt::Expression(expression));
             }
         }
 
-        self.statements
+        statements
     }
 
     fn statement(&mut self) -> Stmt {
-        let peek = self.peek();
-        self.advance();
-        match peek.kind {
-            TokenType::Print => {
+        if self.match_token(TokenType::Print) {
+            self.advance();
+            let expr = self.expression();
+            Stmt::Print(expr)
+        } else if self.match_token(TokenType::If) {
+            self.advance();
+            let expr = self.expression();
+            let then = self.parse();
+            Stmt::If { condition:expr, then_branch: then, else_branch: None }
+        } else if self.match_token(TokenType::Var) {
+            self.advance();
+            let name = self.advance();
+            let equal = self.advance();
+            if equal.kind == TokenType::Equal {
                 let expr = self.expression();
-                Stmt::Print(expr)
+                return Stmt::Var { name: name.lexeme, initializer: expr };
             }
-            TokenType::If => {
-                let expr = self.expression();
-                let then = self.statement();
-                Stmt::If { condition:expr, then_branch: Box::new(then), else_branch: None }
-            }
-            _ => {
-                let name = self.advance();
-                let equal = self.advance();
-                if equal.kind == TokenType::Equal {
-                    let expr = self.expression();
-                    return Stmt::Var { name: name.lexeme, initializer: expr };
-                }
-                panic!("Invalid variable declaration structure");
-            }
+            panic!("Invalid variable declaration structure");
+        } else {
+            let debug_string = format!("{:?}", self.peek());
+            println!("{}", debug_string);
+            panic!("Unexpected statement token at line {}", self.peek().line);
         }
     }
 
@@ -98,6 +108,17 @@ impl Parser {
             TokenType::Number => {
                 let value: f64 = token.lexeme.parse().unwrap();
                 Expr::Literal(value)
+            }
+            TokenType::Identifier => {
+                Expr::Variable(token.lexeme)
+            }
+            TokenType::OpenSmooth => {
+                let expr = self.expression();
+                let closing = self.advance();
+                if closing.kind != TokenType::ClosingSmooth {
+                    panic!("Expected ')' after expression at line {}", closing.line);
+                }
+                expr
             }
             _ => panic!("Expected an expression at line {}", token.line),
         }

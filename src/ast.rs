@@ -38,7 +38,7 @@ pub enum Stmt {
     /// An If statement (Condition, Then branch, optional Else branch)
     If {
         condition: Expr,
-        then_branch: Box<Stmt>,
-        else_branch: Option<Box<Stmt>>,
+        then_branch: Vec<Stmt>,
+        else_branch: Option<Vec<Stmt>>,
     }
 }

@@ -13,6 +13,12 @@ pub enum TokenType {
     // Literals (Values)
     Number,     // e.g., 5.0
     Identifier, // e.g., variable names like "x"
+
+    // Brackets
+    OpenSmooth, // (
+    ClosingSmooth, // )
+    OpenCurly, // {
+    ClosingCurly, // }
     
     // Keywords
     Var,        // "var"
@@ -20,6 +26,7 @@ pub enum TokenType {
     Print,      // "print"
     
     // End of File
+    NewLine,
     EOF,
 }
 

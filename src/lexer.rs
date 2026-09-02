@@ -51,12 +51,19 @@ impl Lexer {
             '*' => self.add_token(TokenType::Star),
             '/' => self.add_token(TokenType::Slash),
             '=' => self.add_token(TokenType::Equal),
+            '(' => self.add_token(TokenType::OpenSmooth),
+            ')' => self.add_token(TokenType::ClosingSmooth),
+            '{' => self.add_token(TokenType::OpenCurly),
+            '}' => self.add_token(TokenType::ClosingCurly),
             
             // Ignore whitespace completely
             ' ' | '\r' | '\t' => {} 
             
             // If it's a newline, just increment our line counter
-            '\n' => self.line += 1,
+            '\n' => {
+                self.add_token(TokenType::NewLine);
+                self.line += 1;
+            }
             
             // Catch-all for things we don't recognize yet
             _ => {
